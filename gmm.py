@@ -8,7 +8,7 @@ import matplotlib
 
 from plot import make_plot
 
-matplotlib.use("TkAgg")
+# matplotlib.use("TkAgg")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -81,7 +81,7 @@ def fit(data, z_weights, loc_list, var_list, n_epoch=10000):
         # find optimal cluster parameters
         loc_list, var_list = fit_clusters(data, assignments.detach(), loc_list, var_list)
 
-        if epoch % 100 == 0:
+        if epoch % 1000 == 0:
             with torch.no_grad():
                 make_plot(
                     data.cpu().detach().numpy(),
@@ -109,5 +109,3 @@ def gmm(data, K):
     var_list = var_list.requires_grad_()
 
     z_weights, loc_list, var_list = fit(data, z_weights, loc_list, var_list)
-
-    make_plot(data, z_weights, loc_list.detach().numpy(), var_list.detach().numpy())

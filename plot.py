@@ -16,7 +16,7 @@ def make_plot(data, z_weights, loc_list, var_list):
         ellipse = 2.0 * np.dot(np.linalg.cholesky(var), circle)
         return ellipse[0] + mu[0], ellipse[1] + mu[1]
 
-    plt.ion()
+    # plt.ion()
 
     data_x, data_y = zip(*data)
 
@@ -28,11 +28,8 @@ def make_plot(data, z_weights, loc_list, var_list):
         plt.scatter(np.array(data_x)[mask.cpu()], np.array(data_y)[mask.cpu()])
 
         x, y = generate_ellipse(params)
-        plt.plot(x, y, alpha=0.1, linewidth=1, linestyle="-")
-
-    # plt.scatter(data_x, data_y)
-    # plt.legend([f"{get_labels(z_weights)}"])
+        plt.plot(x, y, alpha=0.2, linewidth=2, linestyle="-")
 
     plt.show()
-    plt.pause(0.001)
-    plt.clf()
+    # plt.pause(0.001)
+    # plt.clf()
