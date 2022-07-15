@@ -69,6 +69,23 @@ def fit_clusters(data, assignments, loc_list, var_list, n_epoch=100):
     return loc_list, var_list
 
 
+def local_optimization(data, z_weights, loc_list, var_list, n_epochs=100):
+    optimizer = torch.optim.Adam([z_weights, loc_list, var_list], lr=1e-3)
+    for epoch in range(n_epochs):
+        # compute the loss
+        log_probs = compute_log_prob(data, loc_list, var_list)
+        assignments = F.softmax(z_weights, dim=1)
+        weighted_log_probs = batch_elementwise_multiplication(log_probs, assignments)
+        loss = -torch.mean(weighted_log_probs)
+
+        # do optimization
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+    return z_weights, loc_list, var_list
+
+
 def fit(data, z_weights, loc_list, var_list, encoder, n_epoch=10000):
     data = torch.tensor(data, device=device)
 
@@ -76,15 +93,22 @@ def fit(data, z_weights, loc_list, var_list, encoder, n_epoch=10000):
     for epoch in range(n_epoch):
 
         x = encoder.reparameterize(*encoder.encode(data.float()))
-        log_probs = compute_log_prob(x, loc_list.detach(), var_list.detach())
 
-        # find optimal cluster assignments
-        z_weights = fit_labels(log_probs.detach(), z_weights)
+        # log_probs = compute_log_prob(x, loc_list.detach(), var_list.detach())
+        #
+        # # find optimal cluster assignments
+        # z_weights = fit_labels(log_probs.detach(), z_weights)
+        # assignments = F.softmax(z_weights, dim=1)
+        #
+        # # find optimal cluster parameters
+        # loc_list, var_list = fit_clusters(
+        #     x.detach(), assignments.detach(), loc_list, var_list
+        # )
+
+        z_weights, loc_list, var_list = local_optimization(x.detach(), z_weights, loc_list, var_list)
+
+        log_probs = compute_log_prob(x, loc_list, var_list)
         assignments = F.softmax(z_weights, dim=1)
-
-        # find optimal cluster parameters
-        loc_list, var_list = fit_clusters(x.detach(), assignments.detach(), loc_list, var_list)
-
         weighted_log_probs = batch_elementwise_multiplication(
             log_probs, assignments.detach()
         )
